@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jmeter-influxdb
+  namespace: grafana
+  labels:
+    app: jmeter-influxdb
+spec:
+  selector:
+    matchLabels:
+      app: jmeter-influxdb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: jmeter-influxdb
+    spec:
+      initContainers:
+        - name: init-influxdb
+          image: influxdb:1.8-alpine
+          env:
+            - name: INFLUXDB_DB
+              value: jmeter
+            - name: INFLUXDB_ADMIN_USER
+              value: jmeter
+            - name: INFLUXDB_ADMIN_PASSWORD
+              value: jmeter
+            - name: DOCKER_INFLUXDB_INIT_ORG
+              value: jmeter
+            - name: DOCKER_INFLUXDB_INIT_BUCKET
+              value: jmeter
+            - name: INFLUXDB_HTTP_AUTH_ENABLED
+              value: "true"
+          command: ["/init-influxdb.sh"]
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/influxdb
+      containers:
+        - name: jmeter-influxdb
+          image: influxdb:1.8-alpine
+          resources:
+            limits:
+              cpu: 100m
+              memory: 250Mi
+          env:
+            - name: INFLUXDB_DB
+              value: jmeter
+            - name: INFLUXDB_ADMIN_USER
+              value: jmeter
+            - name: INFLUXDB_ADMIN_PASSWORD
+              value: jmeter
+            - name: DOCKER_INFLUXDB_INIT_ORG
+              value: jmeter
+            - name: DOCKER_INFLUXDB_INIT_BUCKET
+              value: jmeter
+            - name: INFLUXDB_HTTP_AUTH_ENABLED
+              value: "true"
+          ports:
+            - containerPort: 8086
+              name: jmeterinfluxdb
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/influxdb
+      volumes:
+        - name: data
+          emptyDir: {}
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: influx-db
+  namespace: grafana
+spec:
+  selector:
+    app: jmeter-influxdb
+  type: NodePort
+  ports:
+    - name: influx-db
+      protocol: TCP
+      port: 8086
+      targetPort: 8086
+      nodePort: 30086 

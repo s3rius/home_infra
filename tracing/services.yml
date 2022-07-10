@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: otlp-collector
+  namespace: tracing
+spec:
+  selector:
+    app: opentelemetry-collector
+  type: NodePort
+  ports:
+    - name: collector
+      protocol: TCP
+      port: 4317
+      targetPort: collector-otlp
+      nodePort: 30017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  namespace: tracing
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - port: 14250
+      targetPort: collector
+      name: collector
+    - port: 16686
+      targetPort: ui
+      name: ui
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: tracing
+spec:
+  selector:
+    app: loki
+  ports:
+    - port: 3100
+      targetPort: loki
+      name: loki

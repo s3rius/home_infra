@@ -1,0 +1,77 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentry-pg
+  namespace: sentry
+  labels:
+    app: sentry-pg
+spec:
+  selector:
+    matchLabels:
+      app: sentry-pg
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sentry-pg
+    spec:
+      containers:
+        - name: sentry-pg
+          image: postgres:13.6-bullseye
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          envFrom:
+            - configMapRef:
+                name: sentry-envs
+          ports:
+            - containerPort: 5432
+              name: pg
+          volumeMounts:
+            - name: pg-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pg-data
+          hostPath:
+            path: /tmp/sentry/data
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sredis
+  namespace: sentry
+  labels:
+    app: sredis
+spec:
+  selector:
+    matchLabels:
+      app: sredis
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sredis
+    spec:
+      containers:
+        - name: sredis
+          image: redis:alpine3.15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          envFrom:
+            - configMapRef:
+                name: sentry-envs
+          ports:
+            - containerPort: 6379
+              name: redis
+      restartPolicy: Always

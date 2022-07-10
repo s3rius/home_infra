@@ -1,0 +1,104 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentry
+  namespace: sentry
+  labels:
+    app: sentry
+spec:
+  selector:
+    matchLabels:
+      app: sentry
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sentry
+    spec:
+      initContainers:
+        - name: migrator
+          image: sentry:9.1.2
+          envFrom:
+            - configMapRef:
+                name: sentry-envs
+          command:
+            - sentry
+            - upgrade
+            - --noinput
+      containers:
+        - name: sentry
+          image: sentry:9.1.2
+          ports:
+            - containerPort: 9000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: sentry-envs
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentry-cron
+  namespace: sentry
+  labels:
+    app: sentry-cron
+spec:
+  selector:
+    matchLabels:
+      app: sentry-cron
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sentry-cron
+    spec:
+      containers:
+        - name: sentry-cron
+          image: sentry:9.1.2
+          command: [sentry, run, cron]
+          envFrom:
+            - configMapRef:
+                name: sentry-envs
+          resources:
+            requests:
+              cpu: 100m
+              memory: 250Mi
+            limits:
+              cpu: 300m
+              memory: 500Mi
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentry-worker
+  namespace: sentry
+  labels:
+    app: sentry-worker
+spec:
+  selector:
+    matchLabels:
+      app: sentry-worker
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sentry-worker
+    spec:
+      containers:
+        - name: sentry-worker
+          image: sentry:9.1.2
+          command: [sentry, run, worker]
+          envFrom:
+            - configMapRef:
+                name: sentry-envs
+          resources:
+            requests:
+              cpu: 100m
+              memory: 250Mi
+            limits:
+              cpu: 300m
+              memory: 500Mi
+      restartPolicy: Always

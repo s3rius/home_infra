@@ -1,0 +1,45 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sredis
+  namespace: sentry
+spec:
+  selector:
+    app: sredis
+  type: ClusterIP
+  ports:
+    - name: sredis
+      protocol: TCP
+      port: 6379
+      targetPort: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentry-pg
+  namespace: sentry
+spec:
+  selector:
+    app: sentry-pg
+  type: ClusterIP
+  ports:
+    - name: sentry-pg
+      protocol: TCP
+      port: 5432
+      targetPort: pg
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentry
+  namespace: sentry
+spec:
+  selector:
+    app: sentry
+  type: ClusterIP
+  ports:
+    - name: sentry
+      protocol: TCP
+      port: 80
+      targetPort: http

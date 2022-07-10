@@ -1,0 +1,105 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opentelemetry-collector
+  namespace: tracing
+  labels:
+    app: opentelemetry-collector
+spec:
+  selector:
+    matchLabels:
+      app: opentelemetry-collector
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: opentelemetry-collector
+    spec:
+      containers:
+        - name: opentelemetry-collector
+          image: otel/opentelemetry-collector-contrib:0.55.0
+          command:
+            - /otelcol-contrib
+            - --config
+            - /etc/otc_conf/config.yml
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otc_conf
+          ports:
+            - containerPort: 4317
+              name: collector-otlp
+      volumes:
+        - name: config
+          configMap:
+            name: opentelemetry-collector-conf
+            items:
+              - key: collector-conf
+                path: config.yml
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: tracing
+  labels:
+    app: jaeger
+spec:
+  selector:
+    matchLabels:
+      app: jaeger
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+        - name: jaeger
+          image: jaegertracing/all-in-one:1.35
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - containerPort: 16686
+              name: ui
+            - containerPort: 14250
+              name: collector
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: tracing
+spec:
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+        - name: loki
+          image: grafana/loki:2.5.0
+          command:
+            - /usr/bin/loki
+            - -config.file=/etc/loki/local-config.yaml
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 3100
+              name: loki

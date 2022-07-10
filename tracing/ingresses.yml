@@ -1,0 +1,40 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jaeger
+  namespace: tracing
+  labels:
+    name: jaeger
+spec:
+  rules:
+  - host: jaeger.localhost
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: jaeger
+            port: 
+              number: 16686
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: loki
+  namespace: tracing
+  labels:
+    name: loki
+spec:
+  rules:
+  - host: loki.localhost
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: loki
+            port: 
+              number: 3100

@@ -1,0 +1,25 @@
+apiVersion: k3d.io/v1alpha4
+kind: Simple
+metadata:
+  name: default
+servers: 1
+volumes:
+  - volume: /tmp/k3d:/storage # Mounts local dir to cluster
+ports:
+  - port: 80:80 # HTTP ports mapping for cluster
+    nodeFilters:
+      - loadbalancer
+  - port: 443:443 # HTTPS ports mapping for cluster.
+    nodeFilters:
+      - loadbalancer
+  - port: "30086:30086" # InfluxDB port
+    nodeFilters:
+      - server:*
+  - port: "30017:30017" # Opentelemetry collector port
+    nodeFilters:
+      - server:*
+registries:
+  create:
+    name: registry.localhost # Registry for containers
+    host: "0.0.0.0" # Host for registry
+    hostPort: "5000" # Local port for registry

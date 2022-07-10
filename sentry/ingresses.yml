@@ -1,0 +1,18 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sentry-ingress
+  namespace: sentry
+spec:
+  rules:
+    - host: sentry.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sentry
+                port:
+                  number: 80
